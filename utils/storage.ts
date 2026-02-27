@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 const PRODUCT_IMAGES_DIR = 'product_images';
 
@@ -55,6 +55,6 @@ export async function deleteProductImage(uri: string): Promise<void> {
       await FileSystem.deleteAsync(uri);
     }
   } catch {
-    // Ignore errors when deleting (file may already be gone)
+    
   }
 }

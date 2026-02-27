@@ -17,14 +17,19 @@ import Toast from 'react-native-toast-message';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { MAX_PRODUCTS, useProducts } from '@/context/ProductsContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { copyImageToPermanentStorage } from '@/utils/storage';
-
-const GRAY_LIGHT = '#F0F0F0';
-const GRAY_BORDER = '#E0E0E0';
-const GRAY_MUTED = '#9E9E9E';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import {
+  GRAY_BORDER,
+  GRAY_LIGHT_BG,
+  GRAY_MUTED_ALT,
+  GRAY_PLACEHOLDER,
+  RED_DESTRUCTIVE,
+  WHITE,
+} from '@/constants/colors';
 
 interface ProductEntry {
   id: string;
@@ -92,7 +97,7 @@ function ProductEntryRow({
 
       {canRemove && (
         <TouchableOpacity style={styles.removeEntryButton} onPress={onRemove}>
-          <IconSymbol name="trash" size={18} color="#E53935" />
+          <Ionicons name="trash-outline" size={24} color={RED_DESTRUCTIVE} />
           <ThemedText style={styles.removeEntryText}>Remove</ThemedText>
         </TouchableOpacity>
       )}
@@ -112,6 +117,13 @@ export default function AddProductScreen() {
 
   const slotsRemaining = MAX_PRODUCTS - products.length;
   const canAddMore = entries.length < 5 && entries.length < slotsRemaining;
+
+  const hasValidEntry = entries.some((e) => {
+    const trimmedName = e.name.trim();
+    const priceNum = parseFloat(e.price.replace(/[^0-9.]/g, ''));
+    return trimmedName && !isNaN(priceNum) && priceNum >= 0 && !!e.photo;
+  });
+  const canSave = !isLimitReached && hasValidEntry;
 
   const pickImage = async (entryId: string) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -177,8 +189,9 @@ export default function AddProductScreen() {
   const handleSave = async () => {
     if (isLimitReached) {
       Alert.alert(
-        'Product limit reached',
-        `You can only add up to ${MAX_PRODUCTS} products. Remove a product to add a new one.`
+        'Limit Reached',
+        'You have reached the maximum of 5 products. Remove a product to add more.',
+        [{ text: 'OK' }]
       );
       return;
     }
@@ -225,19 +238,19 @@ export default function AddProductScreen() {
 
     const newCount = products.length + added;
     if (newCount >= MAX_PRODUCTS) {
-      Toast.show({
-        type: 'success',
-        text1: 'Products added',
-        text2: `You've reached the maximum of ${MAX_PRODUCTS} products.`,
-      });
+      Alert.alert(
+        'Limit Reached',
+        'Your products have been added. You have reached the maximum of 5 products. Remove a product to add more.',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
     } else {
       Toast.show({
         type: 'success',
         text1: 'Products added',
         text2: `${added} product${added > 1 ? 's' : ''} added successfully.`,
       });
+      router.back();
     }
-    router.back();
   };
 
   return (
@@ -295,11 +308,11 @@ export default function AddProductScreen() {
           <Pressable
             style={[
               styles.saveButton,
-              { backgroundColor: isLimitReached ? GRAY_MUTED : primaryColor },
-              isLimitReached && styles.saveButtonDisabled,
+              { backgroundColor: canSave ? primaryColor : GRAY_MUTED_ALT },
+              !canSave && styles.saveButtonDisabled,
             ]}
             onPress={handleSave}
-            disabled={isLimitReached}>
+            disabled={!canSave}>
             <ThemedText style={styles.saveButtonText}>
               {isLimitReached ? `Limit reached (${MAX_PRODUCTS}/5)` : 'Save Products'}
             </ThemedText>
@@ -339,7 +352,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   entryCard: {
-    backgroundColor: GRAY_LIGHT,
+    backgroundColor: GRAY_LIGHT_BG,
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -364,14 +377,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: GRAY_MUTED,
+    borderColor: GRAY_MUTED_ALT,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FAFAFA',
+    backgroundColor: GRAY_PLACEHOLDER,
     gap: 8,
   },
   photoPlaceholderText: {
-    color: GRAY_MUTED,
+    color: GRAY_MUTED_ALT,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -399,7 +412,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   removeEntryText: {
-    color: '#E53935',
+    color: RED_DESTRUCTIVE,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -432,7 +445,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   saveButtonText: {
-    color: '#fff',
+    color: WHITE,
     fontSize: 17,
     fontWeight: '600',
   },

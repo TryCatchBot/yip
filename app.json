@@ -21,7 +21,10 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.trycatchbot.yip"
+      "package": "com.trycatchbot.yip",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -51,6 +54,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d877266b-0396-4d4d-9bd7-193fe47ca4be"
+      }
+    },
+    "owner": "yip-online"
   }
 }
