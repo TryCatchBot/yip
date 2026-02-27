@@ -1,10 +1,10 @@
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Toast from 'react-native-toast-message';
 import 'react-native-reanimated';
+import Toast from 'react-native-toast-message';
 
 import { ProductsProvider } from '@/context/ProductsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';

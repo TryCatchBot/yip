@@ -3,12 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { ICON_MUTED } from '@/constants/colors';
 
 export default function ExploreScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
-        <IconSymbol name="paperplane.fill" size={64} color="#687076" />
+        <IconSymbol name="paperplane.fill" size={64} color={ICON_MUTED} />
         <ThemedText type="title" style={styles.title}>
           Coming Soon
         </ThemedText>
