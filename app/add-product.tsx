@@ -20,10 +20,16 @@ import { ThemedView } from '@/components/themed-view';
 import { MAX_PRODUCTS, useProducts } from '@/context/ProductsContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { copyImageToPermanentStorage } from '@/utils/storage';
+
+const GRAY_LIGHT = '#F0F0F0';
+const GRAY_BORDER = '#E0E0E0';
+const GRAY_MUTED = '#9E9E9E';
 
 interface ProductEntry {
   id: string;
   photo: string | null;
+  photoBase64?: string;
   name: string;
   price: string;
 }
@@ -37,6 +43,7 @@ function ProductEntryRow({
   canRemove,
   iconColor,
   textColor,
+  primaryColor,
 }: {
   entry: ProductEntry;
   onPhotoPress: () => void;
@@ -46,32 +53,36 @@ function ProductEntryRow({
   canRemove: boolean;
   iconColor: string;
   textColor: string;
+  primaryColor: string;
 }) {
   return (
     <View style={styles.entryCard}>
-      <Pressable style={styles.photoButton} onPress={onPhotoPress}>
+      <Pressable
+        style={({ pressed }) => [styles.photoButton, pressed && styles.photoButtonPressed]}
+        onPress={onPhotoPress}>
         {entry.photo ? (
           <Image source={{ uri: entry.photo }} style={styles.photo} />
         ) : (
-          <ThemedView style={styles.photoPlaceholder}>
-            <ThemedText style={styles.photoPlaceholderText}>Tap to add photo</ThemedText>
-          </ThemedView>
+          <View style={styles.photoPlaceholder}>
+            <IconSymbol name="plus.circle.fill" size={32} color={primaryColor} />
+            <ThemedText style={styles.photoPlaceholderText}>Add photo</ThemedText>
+          </View>
         )}
       </Pressable>
 
       <ThemedText style={styles.label}>Product name</ThemedText>
       <TextInput
-        style={[styles.input, { color: textColor }]}
-        placeholder="Enter product name"
+        style={[styles.input, { color: textColor, borderColor: GRAY_BORDER }]}
+        placeholder="e.g. Wireless Headphones"
         placeholderTextColor={iconColor}
         value={entry.name}
         onChangeText={onNameChange}
         autoCapitalize="words"
       />
 
-      <ThemedText style={styles.label}>Price</ThemedText>
+      <ThemedText style={styles.label}>Price (₦)</ThemedText>
       <TextInput
-        style={[styles.input, { color: textColor }]}
+        style={[styles.input, { color: textColor, borderColor: GRAY_BORDER }]}
         placeholder="0.00"
         placeholderTextColor={iconColor}
         value={entry.price}
@@ -81,7 +92,7 @@ function ProductEntryRow({
 
       {canRemove && (
         <TouchableOpacity style={styles.removeEntryButton} onPress={onRemove}>
-          <IconSymbol name="trash" size={20} color="#e74c3c" />
+          <IconSymbol name="trash" size={18} color="#E53935" />
           <ThemedText style={styles.removeEntryText}>Remove</ThemedText>
         </TouchableOpacity>
       )}
@@ -114,11 +125,21 @@ export default function AddProductScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
       setEntries((prev) =>
-        prev.map((e) => (e.id === entryId ? { ...e, photo: result.assets![0].uri } : e))
+        prev.map((e) =>
+          e.id === entryId
+            ? {
+                ...e,
+                photo: asset.uri,
+                photoBase64: asset.base64 ?? undefined,
+              }
+            : e
+        )
       );
     }
   };
@@ -153,7 +174,7 @@ export default function AddProductScreen() {
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (isLimitReached) {
       Alert.alert(
         'Product limit reached',
@@ -192,9 +213,10 @@ export default function AddProductScreen() {
       const trimmedName = e.name.trim();
       const priceNum = parseFloat(e.price.replace(/[^0-9.]/g, ''));
       if (trimmedName && !isNaN(priceNum) && priceNum >= 0 && e.photo && added < slotsRemaining) {
+        const permanentPhotoUri = await copyImageToPermanentStorage(e.photo, e.photoBase64);
         addProduct({
           name: trimmedName,
-          photo: e.photo,
+          photo: permanentPhotoUri,
           price: priceNum.toFixed(2),
         });
         added++;
@@ -223,28 +245,47 @@ export default function AddProductScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}>
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <ThemedText type="subtitle" style={styles.title}>
-            Add Product
-          </ThemedText>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <ThemedText type="title" style={styles.title}>
+              Add Product
+            </ThemedText>
+            <ThemedText style={styles.subtitle}>
+              Add up to {slotsRemaining} product{slotsRemaining !== 1 ? 's' : ''}
+            </ThemedText>
+          </View>
 
-          {entries.map((entry) => (
-            <ProductEntryRow
-              key={entry.id}
-              entry={entry}
-              onPhotoPress={() => pickImage(entry.id)}
-              onNameChange={(v) => updateEntry(entry.id, 'name', v)}
-              onPriceChange={(v) => updateEntry(entry.id, 'price', v)}
-              onRemove={() => removeEntry(entry.id)}
-              canRemove={entries.length > 1}
-              iconColor={iconColor}
-              textColor={textColor}
-            />
+          {entries.map((entry, index) => (
+            <View key={entry.id}>
+              {entries.length > 1 && (
+                <ThemedText style={styles.entryNumber}>Product {index + 1}</ThemedText>
+              )}
+              <ProductEntryRow
+                entry={entry}
+                onPhotoPress={() => pickImage(entry.id)}
+                onNameChange={(v) => updateEntry(entry.id, 'name', v)}
+                onPriceChange={(v) => updateEntry(entry.id, 'price', v)}
+                onRemove={() => removeEntry(entry.id)}
+                canRemove={entries.length > 1}
+                iconColor={iconColor}
+                textColor={textColor}
+                primaryColor={primaryColor}
+              />
+            </View>
           ))}
 
           {canAddMore && (
-            <Pressable style={styles.addEntryButton} onPress={addEntry}>
-              <IconSymbol name="plus.circle.fill" size={32} color={primaryColor} />
+            <Pressable
+              style={({ pressed }) => [
+                styles.addEntryButton,
+                { borderColor: primaryColor },
+                pressed && styles.addEntryButtonPressed,
+              ]}
+              onPress={addEntry}>
+              <IconSymbol name="plus.circle.fill" size={24} color={primaryColor} />
               <ThemedText style={[styles.addEntryText, { color: primaryColor }]}>
                 Add another product
               </ThemedText>
@@ -254,7 +295,7 @@ export default function AddProductScreen() {
           <Pressable
             style={[
               styles.saveButton,
-              { backgroundColor: isLimitReached ? undefined : primaryColor },
+              { backgroundColor: isLimitReached ? GRAY_MUTED : primaryColor },
               isLimitReached && styles.saveButtonDisabled,
             ]}
             onPress={handleSave}
@@ -280,48 +321,71 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 48,
   },
+  header: {
+    marginBottom: 28,
+  },
   title: {
-    marginBottom: 24,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    opacity: 0.7,
+  },
+  entryNumber: {
+    fontSize: 13,
+    fontWeight: '600',
+    opacity: 0.6,
+    marginBottom: 8,
+    marginTop: 8,
   },
   entryCard: {
-    marginBottom: 24,
-    paddingBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    backgroundColor: GRAY_LIGHT,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: GRAY_BORDER,
   },
   photoButton: {
     alignSelf: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  photoButtonPressed: {
+    opacity: 0.8,
   },
   photo: {
-    width: 120,
-    height: 120,
-    borderRadius: 12,
+    width: 140,
+    height: 140,
+    borderRadius: 16,
   },
   photoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 12,
+    width: 140,
+    height: 140,
+    borderRadius: 16,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: '#687076',
+    borderColor: GRAY_MUTED,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FAFAFA',
+    gap: 8,
   },
   photoPlaceholderText: {
-    color: '#687076',
+    color: GRAY_MUTED,
     fontSize: 14,
+    fontWeight: '500',
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     marginBottom: 8,
+    letterSpacing: 0.3,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#687076',
-    borderRadius: 8,
-    padding: 12,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
     marginBottom: 16,
   },
@@ -329,42 +393,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 8,
+    marginTop: 4,
     alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   removeEntryText: {
-    color: '#e74c3c',
+    color: '#E53935',
     fontSize: 14,
+    fontWeight: '500',
   },
   addEntryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    padding: 16,
+    gap: 10,
+    padding: 18,
     marginBottom: 24,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: '#687076',
-    borderRadius: 12,
+    borderRadius: 14,
+    backgroundColor: 'transparent',
+  },
+  addEntryButtonPressed: {
+    opacity: 0.7,
   },
   addEntryText: {
     fontSize: 16,
     fontWeight: '600',
   },
   saveButton: {
-    padding: 16,
-    borderRadius: 8,
+    padding: 18,
+    borderRadius: 14,
     alignItems: 'center',
     marginTop: 8,
   },
   saveButtonDisabled: {
-    backgroundColor: '#687076',
     opacity: 0.7,
   },
   saveButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
   },
 });

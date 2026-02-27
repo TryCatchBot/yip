@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "YipOnlineTask",
-    "slug": "YipOnlineTask",
+    "name": "Yip",
+    "slug": "yip",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "yiponlinetask",
+    "scheme": "yip",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.trycatchbot.YipOnlineTask"
+      "bundleIdentifier": "com.trycatchbot.yip"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.trycatchbot.YipOnlineTask"
+      "package": "com.trycatchbot.yip"
     },
     "web": {
       "output": "static",

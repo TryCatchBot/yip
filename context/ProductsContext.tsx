@@ -1,6 +1,14 @@
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+
+import { deleteProductImage } from '@/utils/storage';
 
 export const MAX_PRODUCTS = 5;
+
+const STORAGE_KEYS = {
+  products: '@yip/products',
+  favorites: '@yip/favorites',
+};
 
 export interface Product {
   id: string;
@@ -16,6 +24,7 @@ interface ProductsContextType {
   toggleFavorite: (id: string) => void;
   isFavorite: (id: string) => boolean;
   isLimitReached: boolean;
+  isLoading: boolean;
 }
 
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
@@ -23,6 +32,43 @@ const ProductsContext = createContext<ProductsContextType | undefined>(undefined
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [productsJson, favoritesJson] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEYS.products),
+          AsyncStorage.getItem(STORAGE_KEYS.favorites),
+        ]);
+        if (productsJson) {
+          const parsed = JSON.parse(productsJson) as Product[];
+          setProducts(Array.isArray(parsed) ? parsed : []);
+        }
+        if (favoritesJson) {
+          const parsed = JSON.parse(favoritesJson) as string[];
+          setFavorites(new Set(Array.isArray(parsed) ? parsed : []));
+        }
+      } catch {
+        // Ignore load errors
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      AsyncStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
+    }
+  }, [products, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      AsyncStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify([...favorites]));
+    }
+  }, [favorites, isLoading]);
 
   const addProduct = useCallback((product: Omit<Product, 'id'>) => {
     setProducts((prev) => {
@@ -36,7 +82,13 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const removeProduct = useCallback((id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setProducts((prev) => {
+      const product = prev.find((p) => p.id === id);
+      if (product?.photo && product.photo.includes('product_images')) {
+        deleteProductImage(product.photo);
+      }
+      return prev.filter((p) => p.id !== id);
+    });
     setFavorites((prev) => {
       const next = new Set(prev);
       next.delete(id);
@@ -69,6 +121,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         toggleFavorite,
         isFavorite,
         isLimitReached,
+        isLoading,
       }}>
       {children}
     </ProductsContext.Provider>
