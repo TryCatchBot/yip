@@ -6,8 +6,8 @@ import { deleteProductImage } from '@/utils/storage';
 export const MAX_PRODUCTS = 5;
 
 const STORAGE_KEYS = {
-  products: '@YipOnlineTask/products',
-  favorites: '@YipOnlineTask/favorites',
+  products: '@yip/products',
+  favorites: '@yip/favorites',
 };
 
 export interface Product {
