@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.trycatchbot.Yip"
+      "bundleIdentifier": "com.trycatchbot.yip"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.trycatchbot.Yip",
+      "package": "com.trycatchbot.yip",
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ]

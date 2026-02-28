@@ -20,6 +20,7 @@ interface ProductsContextType {
   toggleFavorite: (id: string) => void;
   isFavorite: (id: string) => boolean;
   isLimitReached: boolean;
+  isLoading: boolean;
 }
 
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
@@ -74,7 +75,13 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const removeProduct = useCallback((id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setProducts((prev) => {
+      const product = prev.find((p) => p.id === id);
+      if (product?.photo && product.photo.includes('product_images')) {
+        deleteProductImage(product.photo);
+      }
+      return prev.filter((p) => p.id !== id);
+    });
     setFavorites((prev) => {
       const next = new Set(prev);
       next.delete(id);
@@ -107,6 +114,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         toggleFavorite,
         isFavorite,
         isLimitReached,
+        isLoading,
       }}>
       {children}
     </ProductsContext.Provider>

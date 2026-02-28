@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   FlatList,
@@ -20,6 +21,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MAX_PRODUCTS, useProducts, type Product } from '@/context/ProductsContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import {
   GRAY_LIGHT,
@@ -88,7 +90,7 @@ function ProductCard({
               { text: 'Remove', style: 'destructive', onPress: onRemove },
             ]);
           }}>
-          <IconSymbol name="trash" size={16} color={RED_DELETE} />
+          <Ionicons name="trash-outline" size={20} color={RED_DELETE} />
         </TouchableOpacity>
       </View>
     </View>
@@ -96,7 +98,7 @@ function ProductCard({
 }
 
 export default function ProductsScreen() {
-  const { products, removeProduct, isLimitReached } = useProducts();
+  const { products, removeProduct, isLimitReached, isLoading } = useProducts();
   const primaryColor = useThemeColor({}, 'tint');
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
@@ -139,7 +141,6 @@ export default function ProductsScreen() {
 
   const handleAddPress = () => {
     if (isLimitReached) {
-      notificationBottomSheetRef.current?.present();
       return;
     }
     router.push('/add-product');
@@ -200,7 +201,12 @@ export default function ProductsScreen() {
         </View>
       )}
 
-      {products.length === 0 ? (
+      {isLoading ? (
+        <ThemedView style={styles.emptyState}>
+          <ActivityIndicator size="large" color={primaryColor} />
+          <ThemedText style={styles.emptyText}>Loading products...</ThemedText>
+        </ThemedView>
+      ) : products.length === 0 ? (
         <ThemedView style={styles.emptyState}>
           <IconSymbol name="cube.box" size={64} color={GRAY_MUTED} />
           <ThemedText type="subtitle" style={styles.emptyTitle}>
@@ -230,7 +236,7 @@ export default function ProductsScreen() {
         />
       )}
 
-      {!isLimitReached && (
+      {!isLoading && !isLimitReached && (
         <Pressable
           style={[
             styles.addProductButton,
