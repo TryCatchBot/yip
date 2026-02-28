@@ -1,6 +1,10 @@
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 export const MAX_PRODUCTS = 5;
+
+const STORAGE_KEY_PRODUCTS = '@yip_products';
+const STORAGE_KEY_FAVORITES = '@yip_favorites';
 
 export interface Product {
   id: string;
@@ -23,13 +27,47 @@ const ProductsContext = createContext<ProductsContextType | undefined>(undefined
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [storedProducts, storedFavorites] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY_PRODUCTS),
+          AsyncStorage.getItem(STORAGE_KEY_FAVORITES),
+        ]);
+        if (storedProducts) {
+          const parsed = JSON.parse(storedProducts) as Product[];
+          if (Array.isArray(parsed)) setProducts(parsed);
+        }
+        if (storedFavorites) {
+          const parsed = JSON.parse(storedFavorites) as string[];
+          if (Array.isArray(parsed)) setFavorites(new Set(parsed));
+        }
+      } catch {
+        // Ignore load errors
+      } finally {
+        setIsHydrated(true);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    AsyncStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products)).catch(() => {});
+  }, [products, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    AsyncStorage.setItem(STORAGE_KEY_FAVORITES, JSON.stringify([...favorites])).catch(() => {});
+  }, [favorites, isHydrated]);
 
   const addProduct = useCallback((product: Omit<Product, 'id'>) => {
     setProducts((prev) => {
       if (prev.length >= MAX_PRODUCTS) return prev;
       const newProduct: Product = {
         ...product,
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       };
       return [...prev, newProduct];
     });

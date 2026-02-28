@@ -21,18 +21,21 @@ import { ThemedView } from '@/components/themed-view';
 import { MAX_PRODUCTS, useProducts, type Product } from '@/context/ProductsContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-
-const PINK_LIGHT = '#F8E8E8';
-const PINK_ACCENT = '#E8B4B8';
-const PINK_DARK = '#C97B80';
-const GRAY_LIGHT = '#E5E5E5';
-const GRAY_TEXT = '#4A4A4A';
-const GRAY_MUTED = '#9B9B9B';
+import {
+  GRAY_LIGHT,
+  GRAY_MUTED,
+  GRAY_TEXT,
+  PINK_ACCENT,
+  PINK_DARK,
+  PINK_LIGHT,
+  RED_DELETE,
+  WHITE,
+} from '@/constants/colors';
 
 const CARD_GAP = 12;
-const { width } = Dimensions.get('window');
+const { width, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const NOTIFICATION_SHEET_HEIGHT = Math.round(SCREEN_HEIGHT * 0.5);
 const CARD_WIDTH = (width - 40 - CARD_GAP) / 2;
-const RED_DELETE = '#E74C3C';
 
 type SortOption = 'name' | 'price-low' | 'price-high';
 
@@ -100,6 +103,13 @@ export default function ProductsScreen() {
   const [sortBy, setSortBy] = useState<SortOption>('name');
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
   const sortBottomSheetRef = useRef<BottomSheetModal>(null);
+  const notificationBottomSheetRef = useRef<BottomSheetModal>(null);
+
+  const handlePresentNotification = useCallback(() => {
+    if (isLimitReached) {
+      notificationBottomSheetRef.current?.present();
+    }
+  }, [isLimitReached]);
 
   const handlePresentSort = useCallback(() => {
     sortBottomSheetRef.current?.present();
@@ -129,10 +139,7 @@ export default function ProductsScreen() {
 
   const handleAddPress = () => {
     if (isLimitReached) {
-      Alert.alert(
-        'Product limit reached',
-        `You can only add up to ${MAX_PRODUCTS} products. Remove a product to add a new one.`
-      );
+      notificationBottomSheetRef.current?.present();
       return;
     }
     router.push('/add-product');
@@ -155,6 +162,18 @@ export default function ProductsScreen() {
         <ThemedText type="title" style={styles.headerTitle}>
           My Products
         </ThemedText>
+        <TouchableOpacity style={styles.bellButton} onPress={handlePresentNotification}>
+          <IconSymbol
+            name="bell.fill"
+            size={24}
+            color={isLimitReached ? primaryColor : GRAY_MUTED}
+          />
+          {isLimitReached && (
+            <View style={styles.bellBadge}>
+              <Text style={styles.bellBadgeText}>+1</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       <View style={styles.searchBar}>
@@ -226,6 +245,25 @@ export default function ProductsScreen() {
       )}
 
       <BottomSheetModal
+        ref={notificationBottomSheetRef}
+        snapPoints={[NOTIFICATION_SHEET_HEIGHT]}
+        enablePanDownToClose>
+        <BottomSheetView style={styles.notificationSheetContent}>
+          <ThemedText type="subtitle" style={styles.sortModalTitle}>
+            Limit Reached
+          </ThemedText>
+          <ThemedText style={styles.notificationSheetText}>
+            You have reached the maximum of 5 products. Remove a product to add more.
+          </ThemedText>
+          <TouchableOpacity
+            style={[styles.notificationDismissButton, { backgroundColor: primaryColor }]}
+            onPress={() => notificationBottomSheetRef.current?.dismiss()}>
+            <ThemedText style={styles.notificationDismissText}>OK</ThemedText>
+          </TouchableOpacity>
+        </BottomSheetView>
+      </BottomSheetModal>
+
+      <BottomSheetModal
         ref={sortBottomSheetRef}
         snapPoints={['35%']}
         enablePanDownToClose>
@@ -252,7 +290,7 @@ export default function ProductsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     paddingTop: 60,
   },
   header: {
@@ -264,6 +302,30 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: GRAY_TEXT,
+  },
+  bellButton: {
+    position: 'relative',
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: RED_DELETE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  bellBadgeText: {
+    color: WHITE,
+    fontSize: 11,
+    fontWeight: '700',
   },
   addProductButton: {
     position: 'absolute',
@@ -277,7 +339,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   addProductButtonText: {
-    color: '#fff',
+    color: WHITE,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -334,7 +396,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: CARD_WIDTH,
-    backgroundColor: '#fff',
+    backgroundColor: WHITE,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
@@ -401,6 +463,26 @@ const styles = StyleSheet.create({
   sortSheetContent: {
     padding: 24,
     paddingBottom: 32,
+  },
+  notificationSheetContent: {
+    padding: 24,
+    paddingBottom: 24,
+  },
+  notificationSheetText: {
+    marginTop: 8,
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  notificationDismissButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  notificationDismissText: {
+    color: WHITE,
+    fontSize: 16,
+    fontWeight: '600',
   },
   sortModalTitle: {
     marginBottom: 16,

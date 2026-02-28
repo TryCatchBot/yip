@@ -20,6 +20,7 @@ import { ThemedView } from '@/components/themed-view';
 import { MAX_PRODUCTS, useProducts } from '@/context/ProductsContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { GRAY_LIGHT, ICON_MUTED, RED_DELETE, WHITE } from '@/constants/colors';
 
 interface ProductEntry {
   id: string;
@@ -81,7 +82,7 @@ function ProductEntryRow({
 
       {canRemove && (
         <TouchableOpacity style={styles.removeEntryButton} onPress={onRemove}>
-          <IconSymbol name="trash" size={20} color="#e74c3c" />
+          <IconSymbol name="trash" size={20} color={RED_DELETE} />
           <ThemedText style={styles.removeEntryText}>Remove</ThemedText>
         </TouchableOpacity>
       )}
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingBottom: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: GRAY_LIGHT,
   },
   photoButton: {
     alignSelf: 'center',
@@ -304,12 +305,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: '#687076',
+    borderColor: ICON_MUTED,
     alignItems: 'center',
     justifyContent: 'center',
   },
   photoPlaceholderText: {
-    color: '#687076',
+    color: ICON_MUTED,
     fontSize: 14,
   },
   label: {
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#687076',
+    borderColor: ICON_MUTED,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   removeEntryText: {
-    color: '#e74c3c',
+    color: RED_DELETE,
     fontSize: 14,
   },
   addEntryButton: {
@@ -345,7 +346,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: '#687076',
+    borderColor: ICON_MUTED,
     borderRadius: 12,
   },
   addEntryText: {
@@ -357,13 +358,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 8,
+    marginBottom: 8,
   },
   saveButtonDisabled: {
-    backgroundColor: '#687076',
+    backgroundColor: ICON_MUTED,
     opacity: 0.7,
   },
   saveButtonText: {
-    color: '#fff',
+    color: WHITE,
     fontSize: 16,
     fontWeight: '600',
   },
