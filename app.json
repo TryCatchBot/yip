@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Yip",
+    "name": "yip",
     "slug": "yip",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -57,10 +57,7 @@
     },
     "extra": {
       "router": {},
-      "eas": {
-        "projectId": "d877266b-0396-4d4d-9bd7-193fe47ca4be"
-      }
-    },
-    "owner": "yip-online"
+      "eas": {}
+    }
   }
 }

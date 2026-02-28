@@ -20,16 +20,8 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { MAX_PRODUCTS, useProducts } from '@/context/ProductsContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { copyImageToPermanentStorage } from '@/utils/storage';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import {
-  GRAY_BORDER,
-  GRAY_LIGHT_BG,
-  GRAY_MUTED_ALT,
-  GRAY_PLACEHOLDER,
-  RED_DESTRUCTIVE,
-  WHITE,
-} from '@/constants/colors';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { GRAY_LIGHT, ICON_MUTED, RED_DELETE, WHITE } from '@/constants/colors';
 
 interface ProductEntry {
   id: string;
@@ -97,7 +89,7 @@ function ProductEntryRow({
 
       {canRemove && (
         <TouchableOpacity style={styles.removeEntryButton} onPress={onRemove}>
-          <Ionicons name="trash-outline" size={24} color={RED_DESTRUCTIVE} />
+          <IconSymbol name="trash" size={20} color={RED_DELETE} />
           <ThemedText style={styles.removeEntryText}>Remove</ThemedText>
         </TouchableOpacity>
       )}
@@ -352,12 +344,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   entryCard: {
-    backgroundColor: GRAY_LIGHT_BG,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: GRAY_BORDER,
+    marginBottom: 24,
+    paddingBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: GRAY_LIGHT,
   },
   photoButton: {
     alignSelf: 'center',
@@ -377,14 +367,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: GRAY_MUTED_ALT,
+    borderColor: ICON_MUTED,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: GRAY_PLACEHOLDER,
     gap: 8,
   },
   photoPlaceholderText: {
-    color: GRAY_MUTED_ALT,
+    color: ICON_MUTED,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -395,10 +385,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   input: {
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: ICON_MUTED,
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
     marginBottom: 16,
   },
@@ -412,7 +402,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   removeEntryText: {
-    color: RED_DESTRUCTIVE,
+    color: RED_DELETE,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -425,11 +415,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderRadius: 14,
-    backgroundColor: 'transparent',
-  },
-  addEntryButtonPressed: {
-    opacity: 0.7,
+    borderColor: ICON_MUTED,
+    borderRadius: 12,
   },
   addEntryText: {
     fontSize: 16,
@@ -440,13 +427,15 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     marginTop: 8,
+    marginBottom: 8,
   },
   saveButtonDisabled: {
+    backgroundColor: ICON_MUTED,
     opacity: 0.7,
   },
   saveButtonText: {
     color: WHITE,
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
   },
 });

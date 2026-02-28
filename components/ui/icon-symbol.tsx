@@ -22,7 +22,6 @@ const MAPPING = {
   'heart.fill': 'favorite',
   'magnifyingglass': 'search',
   'chevron.down': 'expand-more',
-  'bell': 'notifications',
   'bell.fill': 'notifications',
 } as IconMapping;
 

@@ -36,8 +36,8 @@ import {
 
 const CARD_GAP = 12;
 const { width, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const CARD_WIDTH = (width - 40 - CARD_GAP) / 2;
 const NOTIFICATION_SHEET_HEIGHT = Math.round(SCREEN_HEIGHT * 0.5);
+const CARD_WIDTH = (width - 40 - CARD_GAP) / 2;
 
 type SortOption = 'name' | 'price-low' | 'price-high';
 
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
   },
   notificationSheetText: {
     marginTop: 8,
-    marginBottom: 18,
+    marginBottom: 12,
     lineHeight: 22,
   },
   notificationDismissButton: {

@@ -1,14 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-import { deleteProductImage } from '@/utils/storage';
-
 export const MAX_PRODUCTS = 5;
 
-const STORAGE_KEYS = {
-  products: '@yip/products',
-  favorites: '@yip/favorites',
-};
+const STORAGE_KEY_PRODUCTS = '@yip_products';
+const STORAGE_KEY_FAVORITES = '@yip_favorites';
 
 export interface Product {
   id: string;
@@ -32,50 +28,47 @@ const ProductsContext = createContext<ProductsContextType | undefined>(undefined
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    const load = async () => {
+    (async () => {
       try {
-        const [productsJson, favoritesJson] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_KEYS.products),
-          AsyncStorage.getItem(STORAGE_KEYS.favorites),
+        const [storedProducts, storedFavorites] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY_PRODUCTS),
+          AsyncStorage.getItem(STORAGE_KEY_FAVORITES),
         ]);
-        if (productsJson) {
-          const parsed = JSON.parse(productsJson) as Product[];
-          setProducts(Array.isArray(parsed) ? parsed : []);
+        if (storedProducts) {
+          const parsed = JSON.parse(storedProducts) as Product[];
+          if (Array.isArray(parsed)) setProducts(parsed);
         }
-        if (favoritesJson) {
-          const parsed = JSON.parse(favoritesJson) as string[];
-          setFavorites(new Set(Array.isArray(parsed) ? parsed : []));
+        if (storedFavorites) {
+          const parsed = JSON.parse(storedFavorites) as string[];
+          if (Array.isArray(parsed)) setFavorites(new Set(parsed));
         }
       } catch {
         // Ignore load errors
       } finally {
-        setIsLoading(false);
+        setIsHydrated(true);
       }
-    };
-    load();
+    })();
   }, []);
 
   useEffect(() => {
-    if (!isLoading) {
-      AsyncStorage.setItem(STORAGE_KEYS.products, JSON.stringify(products));
-    }
-  }, [products, isLoading]);
+    if (!isHydrated) return;
+    AsyncStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products)).catch(() => {});
+  }, [products, isHydrated]);
 
   useEffect(() => {
-    if (!isLoading) {
-      AsyncStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify([...favorites]));
-    }
-  }, [favorites, isLoading]);
+    if (!isHydrated) return;
+    AsyncStorage.setItem(STORAGE_KEY_FAVORITES, JSON.stringify([...favorites])).catch(() => {});
+  }, [favorites, isHydrated]);
 
   const addProduct = useCallback((product: Omit<Product, 'id'>) => {
     setProducts((prev) => {
       if (prev.length >= MAX_PRODUCTS) return prev;
       const newProduct: Product = {
         ...product,
-        id: Date.now().toString(),
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       };
       return [...prev, newProduct];
     });
